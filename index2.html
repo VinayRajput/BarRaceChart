@@ -35,9 +35,13 @@
     }
 
     text.yearText {
-      font-size: 64px;
+      font-size: 32px;
       font-weight: 700;
       opacity: 0.25;
+    }
+
+    text.yearText h6 {
+        font-size:16px;
     }
 
     .tick text {
@@ -67,9 +71,9 @@
 <body>
   <script>
     // Feel free to change or delete any of the code you see in this editor!
-    var height = window.innerHeight-50;
-    var width = (window.innerWidth-20);
-    width =  width > 960 ? 960 : width;
+    var height = window.innerHeight - 50;
+    var width = (window.innerWidth - 20);
+    width = width > 960 ? 960 : width;
     var svg = d3.select("body").append("svg")
       .attr("width", width)
       .attr("height", height);
@@ -78,7 +82,13 @@
     var tickDuration2 = 1200;
     var lastyear = 2018;
     var top_n = 25;
-    let year = 2016;
+    let startyear = 2016;
+    let year = startyear;
+    let dataMetric = 'Week';
+    let minSubpoint = 0.1; 
+    let yearSubpoints = ".4";
+    let yearChangeLastPoint = ".9";
+    let direction = 'forward';
 
     const margin = {
       top: 80,
@@ -89,6 +99,7 @@
 
     let barPadding = (height - (margin.bottom + margin.top)) / (top_n * 5);
 
+    
     let title = svg.append('text')
       .attr('class', 'title')
       .attr('y', 24)
@@ -106,11 +117,11 @@
       .style('text-anchor', 'end')
       .html('Source: Metlife');
 
-    
 
-    //d3.csv("https://vinayrajput.github.io/BarRaceChart/data/brand_values2.csv").then(function (data) {
-      d3.csv("data/brand_values2.csv").then(function (data) {
-    
+
+    d3.csv("https://vinayrajput.github.io/BarRaceChart/data/brand_values2.csv").then(function (data) {
+    //d3.csv("data/brand_values2.csv").then(function (data) {
+
       //if (error) throw error;
 
       console.log(data);
@@ -305,7 +316,6 @@
             };
           });
 
-
         valueLabels
           .exit()
           .transition()
@@ -315,22 +325,29 @@
           .attr('y', d => y(top_n + 1) + 5)
           .remove();
 
-        quater = year.toString().split(".")[1];
-        quater = (!!quater) ? quater : 0;
-        if(quater == 4) {
-            year = +year.split(".")[0] + 1 +".9";
+        subpoint = year.toString().split(".")[1];
+        subpoint = (!!subpoint) ? subpoint : 0;
+        if (subpoint == yearSubpoints.split(".")[1] && direction == 'forward') {
+          year = +year.split(".")[0] + yearChangeLastPoint;
+        } else if (subpoint == 9 && direction == 'reverse') {
+          year = +year.split(".")[0] + 1 + yearSubpoints;
         }
-        
-        yearText.html(~~year);
-
-        
-
+        yearText.html(`${~~year}, ${dataMetric} ${+subpoint+1}`);
         if (year == lastyear) {
-            setTimeout(function(){
-                ticker.stop();    
-            },tickDuration)
+          // setTimeout(function(){
+          //     ticker.stop();    
+          // },tickDuration)
+          direction = 'reverse';
+        } else if (year == startyear) {
+          direction = 'forward';
         }
-        year = d3.format('.1f')((+year) + 0.1);
+        if (direction === 'forward') {
+          year = d3.format('.1f')((+year) + minSubpoint);
+        } else {
+          let temp  = subpoint == 0 ? 1-(+yearSubpoints) :  minSubpoint
+          year = d3.format('.1f')((+year) - temp);
+        }
+
       }, tickDuration2);
 
     });
